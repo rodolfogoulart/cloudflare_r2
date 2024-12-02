@@ -1,3 +1,5 @@
-## 0.0.1
+## 0.0.2
+* Fix bug when call CloudFlareR2.init multiple time, flutter_rust_bridge don't allow
 
-* TODO: Add Get/Put/Delete Object to CloudFlare R2
+## 0.0.1
+* Add Get/Put/Delete Object to CloudFlare R2
