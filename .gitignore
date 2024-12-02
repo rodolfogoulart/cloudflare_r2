@@ -8,6 +8,7 @@
 .buildlog/
 .history
 .svn/
+.timetracker
 migrate_working_dir/
 
 # IntelliJ related

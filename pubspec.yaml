@@ -1,7 +1,7 @@
 name: cloudflare_r2
 description: "Flutter FFI Rust plugin for Cloudflare R2."
 version: 0.0.1
-# homepage:
+homepage: "https://github.com/rodolfogoulart/cloudflare_r2"
 
 environment:
   sdk: ^3.5.4
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_rust_bridge: 2.6.0
+  flutter_rust_bridge: ^2.6.0
   plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
