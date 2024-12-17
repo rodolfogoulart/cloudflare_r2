@@ -1,4 +1,4 @@
-library cloudflare_r2;
+// library cloudflare_r2;
 
 import 'dart:typed_data';
 
@@ -52,8 +52,8 @@ class CloudFlareR2 {
     return api.putObject(
         bucket: bucket,
         accountId: accountId,
-        accessId: accessId,
-        secretAccessKey: secretAccessKey,
+        acessId: accessId,
+        secretAcessKey: secretAccessKey,
         objectName: objectName,
         objectBytes: objectBytes,
         cacheControl: cacheControl,
