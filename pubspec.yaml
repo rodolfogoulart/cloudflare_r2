@@ -1,6 +1,6 @@
 name: cloudflare_r2
 description: "Flutter FFI Rust plugin for Cloudflare R2."
-version: 0.0.2
+version: 0.0.3
 homepage: "https://github.com/rodolfogoulart/cloudflare_r2"
 
 environment:
