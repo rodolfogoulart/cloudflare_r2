@@ -1,3 +1,6 @@
+## 0.0.3
+* upgrade Package flutter_rust_bridge 
+
 ## 0.0.2
 * Fix bug when call CloudFlareR2.init multiple time, flutter_rust_bridge don't allow
 
