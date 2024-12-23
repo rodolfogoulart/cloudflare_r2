@@ -1,6 +1,6 @@
-# cloudflare_r2_example
+# example
 
-Demonstrates how to use the cloudflare_r2 plugin.
+A new Flutter project.
 
 ## Getting Started
 
