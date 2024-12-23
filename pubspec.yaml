@@ -1,6 +1,6 @@
 name: cloudflare_r2
-description: "Flutter FFI Rust plugin for Cloudflare R2."
-version: 0.0.3
+description: "Flutter plugin for Cloudflare R2."
+version: 0.0.4
 homepage: "https://github.com/rodolfogoulart/cloudflare_r2"
 
 environment:
@@ -8,46 +8,29 @@ environment:
   flutter: '>=3.3.0'
 
 dependencies:
+  aws_common: ^0.7.4
+  aws_signature_v4: ^0.6.3
+  dio: ^5.7.0
   flutter:
     sdk: flutter
-  flutter_rust_bridge: ^2.7.0
-  plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
-  ffi: ^2.1.0
-  ffigen: ^16.0.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   integration_test:
     sdk: flutter
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
-flutter:
-  # This section identifies this Flutter project as a plugin project.
-  # The 'pluginClass' specifies the class (in Java, Kotlin, Swift, Objective-C, etc.)
-  # which should be registered in the plugin registry. This is required for
-  # using method channels.
-  # The Android 'package' specifies package in which the registered class is.
-  # This is required for using method channels on Android.
-  # The 'ffiPlugin' specifies that native code should be built and bundled.
-  # This is required for using `dart:ffi`.
-  # All these are used by the tooling to maintain consistency when
-  # adding or updating assets for this project.
-  #
-  # Please refer to README.md for a detailed explanation.
-  plugin:
-    platforms:
-      android:
-        ffiPlugin: true
-      ios:
-        ffiPlugin: true
-      linux:
-        ffiPlugin: true
-      macos:
-        ffiPlugin: true
-      windows:
-        ffiPlugin: true
+# flutter:
+  # plugin:
+  #   platforms:
+  #     android:
+  #       ffiPlugin: true
+  #     ios:
+  #       ffiPlugin: true
+  #     linux:
+  #       ffiPlugin: true
+  #     macos:
+  #       ffiPlugin: true
+  #     windows:
+  #       ffiPlugin: true
