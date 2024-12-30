@@ -77,43 +77,70 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                      onPressed: () async {
-                        Stopwatch sw = Stopwatch()..start();
-                        CloudFlareR2.init(
-                          accoundId: controllerAccountId.text,
-                          accessKeyId: controllerAcessId.text,
-                          secretAccessKey: controllerSecretAccessKey.text,
-                        );
-                        var path = (await getApplicationSupportDirectory()).path;
-                        path = '$path${Platform.pathSeparator}${controllerObjectName.text}';
-                        log(path);
-                        await CloudFlareR2.getObject(
-                          pathToSave: path,
-                          onReceiveProgress: (total, received) {
-                            if (total != -1) {
-                              log('${(received / total * 100).toStringAsFixed(0)}%');
+                  Row(
+                    children: [
+                      ElevatedButton(
+                          onPressed: () async {
+                            Stopwatch sw = Stopwatch()..start();
+                            CloudFlareR2.init(
+                              accoundId: controllerAccountId.text,
+                              accessKeyId: controllerAcessId.text,
+                              secretAccessKey: controllerSecretAccessKey.text,
+                            );
+                            var path = (await getApplicationSupportDirectory()).path;
+                            path = '$path${Platform.pathSeparator}${controllerObjectName.text}';
+                            log(path);
+                            await CloudFlareR2.getObject(
+                              pathToSave: path,
+                              onReceiveProgress: (total, received) {
+                                if (total != -1) {
+                                  log('${(received / total * 100).toStringAsFixed(0)}%');
+                                }
+                              },
+                              bucket: controllerBucket.text,
+                              objectName: controllerObjectName.text,
+                            );
+                            sw.stop();
+                            log('${sw.elapsed.inSeconds} seconds');
+                            int timeDownloaded = sw.elapsed.inSeconds;
+
+                            File file = File(path);
+                            // await file.writeAsBytes(object);
+
+                            log(file.path);
+                            if (file.existsSync()) {
+                              log('file exists');
+                              setState(() {
+                                result = 'File downloaded to: ${file.path}\n\n Time Downloaded: $timeDownloaded seconds';
+                              });
                             }
                           },
-                          bucket: controllerBucket.text,
-                          objectName: controllerObjectName.text,
-                        );
-                        sw.stop();
-                        log('${sw.elapsed.inSeconds} seconds');
-                        int timeDownloaded = sw.elapsed.inSeconds;
+                          child: const Text('Get Object')),
+                      //get the object size
+                      ElevatedButton(
+                          onPressed: () async {
+                            Stopwatch sw = Stopwatch()..start();
+                            CloudFlareR2.init(
+                              accoundId: controllerAccountId.text,
+                              accessKeyId: controllerAcessId.text,
+                              secretAccessKey: controllerSecretAccessKey.text,
+                            );
+                            var size = await CloudFlareR2.getObjectSize(
+                              bucket: controllerBucket.text,
+                              objectName: controllerObjectName.text,
+                            );
+                            sw.stop();
+                            log('${sw.elapsed.inSeconds} seconds');
+                            int time = sw.elapsed.inSeconds;
 
-                        File file = File(path);
-                        // await file.writeAsBytes(object);
-
-                        log(file.path);
-                        if (file.existsSync()) {
-                          log('file exists');
-                          setState(() {
-                            result = 'File downloaded to: ${file.path}\n\n Time Downloaded: $timeDownloaded seconds';
-                          });
-                        }
-                      },
-                      child: const Text('Get Object')),
+                            setState(() {
+                              result =
+                                  'File Size: $size bytes , ${(size / 1024 / 1024).toStringAsFixed(2)} MB\n\n Duration: $time seconds';
+                            });
+                          },
+                          child: const Text('Get Object Size')),
+                    ],
+                  ),
                   const Divider(),
                   TextField(
                     controller: controllercacheControl,

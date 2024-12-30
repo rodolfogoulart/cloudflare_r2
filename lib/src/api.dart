@@ -93,6 +93,73 @@ class CloudFlareR2 {
     return response.data;
   }
 
+<<<<<<< Updated upstream
+=======
+  ///get File SIZE from R2
+  ///
+  ///return the size of the object in `bytes`
+  ///
+  ///To get the size of the object in `MB` use the following code
+  ///```dart
+  ///var size = await CloudFlareR2.getObjectSize('your bucket', 'your object name');
+  ///mbSize = size / 1024 / 1024;
+  ///print('Size in bytes: $size');
+  ///print('Size in MB: ${mbSize.toStringAsFixed(2)} MB');
+  ///```
+  ///
+  ///*code from [@jesussmile](https://github.com/rodolfogoulart/cloudflare_r2/issues/4)*
+  static Future<int> getObjectSize({
+    required String bucket,
+    required String objectName,
+    String region = 'us-east-1',
+  }) async {
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+
+    final urlRequest = AWSHttpRequest.head(
+      Uri.https(_host, '$bucket/$objectName'),
+      headers: {
+        AWSHeaders.host: _host,
+        'Accept-Encoding': 'identity',
+      },
+    );
+
+    final signedRequest = await _signer!.sign(
+      urlRequest,
+      credentialScope: _scope!,
+      serviceConfiguration: _serviceConfiguration,
+    );
+
+    final response = await signedRequest.send().response;
+
+    // log('All Headers: ${response.headers}');
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to get object size: ${response.statusCode}');
+    }
+
+    // Get content-length as String
+    final contentLengthStr = response.headers['content-length'];
+    if (contentLengthStr == null || contentLengthStr.isEmpty) {
+      throw Exception('Content-Length header missing');
+    }
+
+    // Parse size with error handling
+    int? size;
+    try {
+      size = int.parse(contentLengthStr);
+    } catch (e) {
+      //log('Error parsing content length: $e');
+      throw Exception('Failed to parse content length: $contentLengthStr');
+    }
+
+    if (size <= 0) {
+      throw Exception('Invalid file size: $size bytes');
+    }
+
+    return size;
+  }
+
+>>>>>>> Stashed changes
   ///put the Object to R2
   ///
   static Future<void> putObject({
