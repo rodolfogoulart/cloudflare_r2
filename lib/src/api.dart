@@ -93,8 +93,6 @@ class CloudFlareR2 {
     return response.data;
   }
 
-<<<<<<< Updated upstream
-=======
   ///get File SIZE from R2
   ///
   ///return the size of the object in `bytes`
@@ -159,7 +157,6 @@ class CloudFlareR2 {
     return size;
   }
 
->>>>>>> Stashed changes
   ///put the Object to R2
   ///
   static Future<void> putObject({

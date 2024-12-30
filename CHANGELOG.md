@@ -1,11 +1,8 @@
-<<<<<<< Updated upstream
-## 0.0.4
-=======
 ## 0.0.6
 * Add getObjectSize [issue from #4]
     * thanks to @jesussmile
+
 ## 0.0.5
->>>>>>> Stashed changes
 * Fix the example of onReceiveProgress
 
 ## 0.0.4
