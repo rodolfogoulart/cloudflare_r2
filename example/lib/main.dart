@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> {
                           pathToSave: path,
                           onReceiveProgress: (total, received) {
                             if (total != -1) {
-                              log('${(total / received * 100).toStringAsFixed(0)}%');
+                              log('${(received / total * 100).toStringAsFixed(0)}%');
                             }
                           },
                           bucket: controllerBucket.text,

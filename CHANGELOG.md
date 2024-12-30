@@ -1,4 +1,7 @@
 ## 0.0.4
+* Fix the example of onReceiveProgress
+
+## 0.0.4
 * Change the core to use aws_common and aws_signature_v4 instead of rust ffi (rust ffi have problems with android platform)
 
 ## 0.0.3
