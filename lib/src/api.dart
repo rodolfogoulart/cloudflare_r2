@@ -1,5 +1,4 @@
 //check for https://github.com/aws-amplify/amplify-flutter/blob/main/packages/aws_signature_v4/example/bin/example.dart
-import 'dart:developer';
 
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_signature_v4/aws_signature_v4.dart';
@@ -17,22 +16,17 @@ class CloudFlareR2 {
 
   // Set up S3 values
   static AWSCredentialScope? _scope;
-  static final S3ServiceConfiguration _serviceConfiguration =
-      S3ServiceConfiguration();
+  static final S3ServiceConfiguration _serviceConfiguration = S3ServiceConfiguration();
 
   static init(
-      {required String accoundId,
-      required String accessKeyId,
-      required String secretAccessKey,
-      String region = 'us-east-1'}) {
+      {required String accoundId, required String accessKeyId, required String secretAccessKey, String region = 'us-east-1'}) {
     _host = '$accoundId.r2.cloudflarestorage.com';
     _accessKeyId = accessKeyId;
     _secretAccessKey = secretAccessKey;
     // Create a signer which uses the `default` profile from the shared
     // credentials file.
     _signer = AWSSigV4Signer(
-      credentialsProvider: AWSCredentialsProvider(
-          AWSCredentials(_accessKeyId!, _secretAccessKey!)),
+      credentialsProvider: AWSCredentialsProvider(AWSCredentials(_accessKeyId!, _secretAccessKey!)),
     );
     _scope = AWSCredentialScope(
       region: region,
@@ -70,8 +64,7 @@ class CloudFlareR2 {
     required String pathToSave,
     void Function(int received, int total)? onReceiveProgress,
   }) async {
-    assert(_signer != null,
-        'Please call CloudFlareR2.init() before using this library');
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
 
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.get(
@@ -174,8 +167,7 @@ class CloudFlareR2 {
     String region = 'us-east-1',
     String? contentType,
   }) async {
-    assert(_signer != null,
-        'Please call CloudFlareR2.init() before using this library');
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.put(
       Uri.https(_host, '$bucket/$objectName'),
@@ -203,10 +195,8 @@ class CloudFlareR2 {
   }
 
   ///delete the Object from R2
-  static Future<void> deleteObject(
-      {required String bucket, required String objectName}) async {
-    assert(_signer != null,
-        'Please call CloudFlareR2.init() before using this library');
+  static Future<void> deleteObject({required String bucket, required String objectName}) async {
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
 
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.delete(
