@@ -103,14 +103,23 @@ class CloudFlareR2 {
 
   ///get File SIZE from R2
   ///
-
+  ///return the size of the object in `bytes`
+  ///
+  ///To get the size of the object in `MB` use the following code
+  ///```dart
+  ///var size = await CloudFlareR2.getObjectSize('your bucket', 'your object name');
+  ///mbSize = size / 1024 / 1024;
+  ///print('Size in bytes: $size');
+  ///print('Size in MB: ${mbSize.toStringAsFixed(2)} MB');
+  ///```
+  ///
+  ///*code from [@jesussmile](https://github.com/rodolfogoulart/cloudflare_r2/issues/4)*
   static Future<int> getObjectSize({
     required String bucket,
     required String objectName,
     String region = 'us-east-1',
   }) async {
-    assert(_signer != null,
-        'Please call CloudFlareR2.init() before using this library');
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
 
     final urlRequest = AWSHttpRequest.head(
       Uri.https(_host, '$bucket/$objectName'),
@@ -140,8 +149,6 @@ class CloudFlareR2 {
       throw Exception('Content-Length header missing');
     }
 
-    log('Raw content-length string: $contentLengthStr');
-
     // Parse size with error handling
     int? size;
     try {
@@ -154,10 +161,6 @@ class CloudFlareR2 {
     if (size <= 0) {
       throw Exception('Invalid file size: $size bytes');
     }
-
-    final mbSize = size / 1024 / 1024;
-    log('Size in bytes: $size');
-    log('Size in MB: ${mbSize.toStringAsFixed(2)} MB');
 
     return size;
   }

@@ -37,6 +37,14 @@ await CloudFlareR2.getObject(
       //do the progress of the download here
     },
   );
+
+  //to get the Object Size
+  //return the size in bytes
+  await CloudFlareR2.getObjectSize(
+    bucket: 'bucket name',
+    objectName: 'name of the object',
+  );
+
 //upload some object
 await CloudFlareR2.putObject(
   bucket: 'bucket name',
