@@ -1,3 +1,6 @@
+## 0.0.7
+* Add listObjectsV2
+
 ## 0.0.6
 * Add getObjectSize [issue from #4]
     * thanks to @jesussmile

@@ -1,6 +1,6 @@
 name: cloudflare_r2
 description: "Flutter plugin for Cloudflare R2."
-version: 0.0.6
+version: 0.0.7
 homepage: "https://github.com/rodolfogoulart/cloudflare_r2"
 
 environment:
@@ -13,6 +13,7 @@ dependencies:
   dio: ^5.7.0
   flutter:
     sdk: flutter
+  xml: ^6.5.0
 
 dev_dependencies:
   flutter_test:

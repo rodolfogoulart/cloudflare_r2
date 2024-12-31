@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cloudflare_r2/src/model/object_info.dart';
 import 'package:flutter/material.dart';
 import 'package:cloudflare_r2/cloudflare_r2.dart';
 
@@ -30,7 +31,7 @@ class _MyAppState extends State<MyApp> {
 
   final controllerObjectName = TextEditingController(text: '');
   //
-  final controllercacheControl = TextEditingController(text: '');
+  // final controllercacheControl = TextEditingController(text: '');
   final controllercontentType = TextEditingController(text: '');
 
   String result = '';
@@ -42,7 +43,7 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(title: const Text('CloudFlare R2 Example')),
         body: Center(
           child: SizedBox(
-            width: 400,
+            width: 500,
             child: SingleChildScrollView(
               child: Column(
                 children: [
@@ -139,15 +140,40 @@ class _MyAppState extends State<MyApp> {
                             });
                           },
                           child: const Text('Get Object Size')),
+
+                      //
+
+                      ElevatedButton(
+                          onPressed: () async {
+                            Stopwatch sw = Stopwatch()..start();
+                            CloudFlareR2.init(
+                              accoundId: controllerAccountId.text,
+                              accessKeyId: controllerAcessId.text,
+                              secretAccessKey: controllerSecretAccessKey.text,
+                            );
+                            List<ObjectInfo> objects = await CloudFlareR2.listObjectsV2(
+                              bucket: controllerBucket.text,
+                              // delimiter: '/',
+                            );
+                            sw.stop();
+                            log('${sw.elapsed.inSeconds} seconds');
+                            int time = sw.elapsed.inSeconds;
+
+                            setState(() {
+                              result =
+                                  'Objects on Bucket: ${objects.length}\n\n Duration: $time seconds\n\n ${objects.map((e) => e.key).join('\n')}';
+                            });
+                          },
+                          child: const Text('List Objects on Bucket')),
                     ],
                   ),
                   const Divider(),
-                  TextField(
-                    controller: controllercacheControl,
-                    decoration: const InputDecoration(
-                      labelText: 'Cache Control',
-                    ),
-                  ),
+                  // TextField(
+                  //   controller: controllercacheControl,
+                  //   decoration: const InputDecoration(
+                  //     labelText: 'Cache Control',
+                  //   ),
+                  // ),
                   TextField(
                     controller: controllercontentType,
                     decoration: const InputDecoration(
