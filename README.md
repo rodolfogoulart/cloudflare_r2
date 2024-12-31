@@ -2,18 +2,18 @@
 
 Flutter CloudFlare R2 plugin project. It's using a [aws_signature_v4](https://pub.dev/packages/aws_signature_v4) to access CloudFlare R2
 
-For now only **get/put/delete** Object on R2 Bucket
+For now only **get [object, size]/put/delete/list object** Object on R2 Bucket
 
 ## `Tested on`
 
 
-| Platform | get       | put       | delete    |
-| ---------- | ----------- | ----------- | ----------- |
-| Windows  | 👍        | 👍        | 👍        |
-| Android  | 👍        | 👍        | 👍        |
-| Linux    | need test | need test | need test |
-| MacOS    | need test | need test | need test |
-| Ios      | need test | need test | need test |
+| Function          | Windows       | Android       | Linux    | MacOS    | Ios    |
+| ----------        | ----------- | ----------- | ----------- | ----------- | ----------- |
+| Get Object        | 👍 | 👍       | need test | need test | need test |
+| Get Object Size   | 👍 | 👍       |  need test | need test | need test |
+| Put Object        | 👍 | 👍       | need test | need test | need test |
+| Delete Object     | 👍 | 👍       | need test | need test | need test |
+| List Objects      | 👍 | need test | need test | need test | need test |
 
 ## Getting Started
 
@@ -43,6 +43,12 @@ await CloudFlareR2.getObject(
   await CloudFlareR2.getObjectSize(
     bucket: 'bucket name',
     objectName: 'name of the object',
+  );
+
+  //to get the List of Objects on a bucket
+  //return List<ObjectInfo>
+  await CloudFlareR2.listObjectsV2(
+    bucket: 'bucket name',
   );
 
 //upload some object

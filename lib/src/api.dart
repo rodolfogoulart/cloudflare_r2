@@ -3,6 +3,9 @@
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_signature_v4/aws_signature_v4.dart';
 import 'package:dio/dio.dart';
+import 'package:xml/xml.dart';
+
+import 'model/object_info.dart';
 
 class CloudFlareR2 {
   CloudFlareR2._();
@@ -221,5 +224,109 @@ class CloudFlareR2 {
       throw Exception(
           'Failed to download file. AWS Status Code: $uploadStatus\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete');
     }
+  }
+
+  /// List objects in a bucket
+  ///
+  /// [bucket] - the bucket name
+  ///
+  /// [region] - the region of the bucket
+  ///
+  /// [doPagination] - whether to paginate through all objects in the bucket
+  ///
+  /// [maxKeys] - the maximum number of objects to return in a single response
+  ///
+  /// [continuationToken] - the token to use for paginating through objects, **DO NOT** set this manually unless you know what you are doing
+  ///
+  /// [delimiter] - a character you use to group keys
+  ///
+  /// [prefix] - limits the response to keys that begin with the specified prefix
+  ///
+  /// [encodingType] - specifies the encoding method used to encode the object keys in the response
+  ///
+  /// [startAfter] - specifies the key to start after when listing objects in a bucket
+  static Future<List<ObjectInfo>> listObjectsV2({
+    required String bucket,
+    String region = 'us-east-1',
+    bool doPagination = true,
+    int maxKeys = 1,
+    String? continuationToken,
+    String? delimiter,
+    String? prefix,
+    String? encodingType,
+    String? startAfter,
+  }) async {
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+
+    // Create query parameters
+    final queryParams = {
+      'list-type': '2',
+      'max-keys': maxKeys.toString(),
+      if (continuationToken != null) 'continuation-token': continuationToken,
+      if (delimiter != null) 'delimiter': delimiter,
+      if (prefix != null) 'prefix': prefix,
+      if (encodingType != null) 'encoding-type': encodingType,
+      if (startAfter != null) 'start-after': startAfter,
+    };
+    // Create a pre-signed URL for listing objects in the bucket
+    final urlRequest = AWSHttpRequest.get(
+      Uri.https(_host, bucket, queryParams),
+      headers: {
+        AWSHeaders.host: _host,
+      },
+    );
+    final signedUrl = await _signer!.presign(
+      urlRequest,
+      credentialScope: _scope!,
+      serviceConfiguration: _serviceConfiguration,
+      expiresIn: const Duration(minutes: 10),
+    );
+
+    Dio dio = Dio();
+    final response = await dio.getUri(signedUrl);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to list objects on bucket $bucket');
+    }
+
+    // Parse XML response
+    final xml = response.data;
+    final document = XmlDocument.parse(xml);
+    final Iterable<XmlElement> contents = document.findAllElements('Contents');
+    final nextContinuationToken = document.findAllElements('NextContinuationToken').singleOrNull?.innerText;
+
+    // Extract object names
+    final List<ObjectInfo> objectNames = [];
+    for (var node in contents) {
+      var key = node.findElements('Key').singleOrNull?.innerText;
+      var size = node.findElements('Size').singleOrNull?.innerText;
+      var lastModified = node.findElements('LastModified').singleOrNull?.innerText;
+      var eTag = node.findElements('ETag').singleOrNull?.innerText;
+      var storageClass = node.findElements('StorageClass').singleOrNull?.innerText;
+
+      if (key == null || size == null || lastModified == null || eTag == null || storageClass == null) {
+        throw Exception('Failed to parse object info');
+      }
+
+      objectNames.add(ObjectInfo(
+        key: key,
+        size: int.parse(size),
+        lastModified: DateTime.parse(lastModified),
+        eTag: eTag,
+        storageClass: storageClass,
+      ));
+    }
+    if (doPagination == false) return objectNames;
+    if (nextContinuationToken != null) {
+      // Recursive call to get more objects if continuation token is present
+      final nextObjectNames = await listObjectsV2(
+        bucket: bucket,
+        region: region,
+        maxKeys: maxKeys,
+        continuationToken: nextContinuationToken,
+      );
+      objectNames.addAll(nextObjectNames);
+    }
+
+    return objectNames;
   }
 }
