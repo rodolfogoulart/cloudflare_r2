@@ -1,3 +1,8 @@
+## 0.0.9
+* Add deleteObjects
+* Add exception for status code returned from api and fix wrong messages
+* Add var `statusCode` to retrieve the last status Code from last call
+
 ## 0.0.8
 * Add getObjectSize
 * Refactory getObject to not use Dio
