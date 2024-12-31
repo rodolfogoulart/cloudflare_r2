@@ -262,13 +262,35 @@ class _MyAppState extends State<MyApp> {
                               sw.stop();
                               log('${sw.elapsed.inSeconds} seconds');
                               int time = sw.elapsed.inSeconds;
-
+                              log(CloudFlareR2.statusCode.toString());
                               setState(() {
                                 result =
                                     'File Deleted to: ${"${controllerBucket.text}/${controllerObjectName.text}"}\n\n Time to Delete: $time seconds';
                               });
                             },
                             child: const Text('Delete Object')),
+                        ElevatedButton(
+                            onPressed: () async {
+                              Stopwatch sw = Stopwatch()..start();
+                              CloudFlareR2.init(
+                                accoundId: controllerAccountId.text,
+                                accessKeyId: controllerAcessId.text,
+                                secretAccessKey: controllerSecretAccessKey.text,
+                              );
+                              await CloudFlareR2.deleteObjects(
+                                bucket: controllerBucket.text,
+                                objectNames: controllerObjectName.text.split(','),
+                              );
+                              sw.stop();
+                              log('${sw.elapsed.inSeconds} seconds');
+                              int time = sw.elapsed.inSeconds;
+
+                              setState(() {
+                                result =
+                                    'Files Deleted to: ${"${controllerBucket.text}/${controllerObjectName.text.split(',')}"}\n\n Time to Delete: $time seconds';
+                              });
+                            },
+                            child: const Text('Delete Objects')),
                       ],
                     ),
                     Text(result)

@@ -1,5 +1,7 @@
 //check for https://github.com/aws-amplify/amplify-flutter/blob/main/packages/aws_signature_v4/example/bin/example.dart
 
+import 'dart:convert';
+
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_signature_v4/aws_signature_v4.dart';
 import 'package:intl/intl.dart';
@@ -16,11 +18,26 @@ class CloudFlareR2 {
   static AWSSigV4Signer? _signer;
   static String? _accessKeyId;
   static String? _secretAccessKey;
+  static int? _statusCode;
+
+  ///return the last status code from the last request
+  static int? get statusCode => _statusCode;
 
   // Set up S3 values
   static AWSCredentialScope? _scope;
   static final S3ServiceConfiguration _serviceConfiguration = S3ServiceConfiguration();
 
+  ///initialize the CloudFlareR2
+  ///
+  ///[accoundId] - the account id
+  ///
+  ///[accessKeyId] - the access key id
+  ///
+  ///[secretAccessKey] - the secret access key
+  ///
+  ///[region] - the region of the bucket
+  ///
+  //MARK: init
   static init(
       {required String accoundId, required String accessKeyId, required String secretAccessKey, String region = 'us-east-1'}) {
     _host = '$accoundId.r2.cloudflarestorage.com';
@@ -35,6 +52,7 @@ class CloudFlareR2 {
       region: region,
       service: AWSService.s3,
     );
+    _statusCode = null;
   }
 
   ///get the Object from R2
@@ -60,6 +78,7 @@ class CloudFlareR2 {
   ///   }
   /// }
   /// ```
+  //MARK: getObject
   static Future getObject({
     required String bucket,
     required String objectName,
@@ -68,7 +87,7 @@ class CloudFlareR2 {
     void Function(int received, int total)? onReceiveProgress,
   }) async {
     assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
-
+    _statusCode = null;
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.get(
       Uri.https(_host, '$bucket/$objectName'),
@@ -97,7 +116,16 @@ class CloudFlareR2 {
 
     var response = await send.response;
     expectedTotalBytes = int.tryParse(response.headers['content-length'] ?? '') ?? -1;
-    if (response.statusCode != 200) {
+    _statusCode = response.statusCode;
+
+    if (statusCode != 200) {
+      //https://awscli.amazonaws.com/v2/documentation/api/2.9.6/reference/s3api/get-object.html
+      if (statusCode == 404) {
+        throw Exception('File not found');
+      }
+      if (statusCode == 403) {
+        throw Exception('Access Denied');
+      }
       throw Exception('Failed to download file');
     }
 
@@ -125,12 +153,12 @@ class CloudFlareR2 {
   ///```
   ///
   ///*code from [@jesussmile](https://github.com/rodolfogoulart/cloudflare_r2/issues/4)*
+  //MARK: getObjectSize
   static Future<int> getObjectSize({
     required String bucket,
     required String objectName,
     String region = 'us-east-1',
   }) async {
-    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
     return (await getObjectInfo(bucket: bucket, objectName: objectName, region: region)).size;
   }
 
@@ -144,12 +172,16 @@ class CloudFlareR2 {
   ///
   ///return [ObjectInfo] - the object info
   ///  * [storageClass] not available
+  ///
+  /// check https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
+  //MARK: getObjectInfo
   static Future<ObjectInfo> getObjectInfo({
     required String bucket,
     required String objectName,
     String region = 'us-east-1',
   }) async {
     assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    _statusCode = null;
 
     final urlRequest = AWSHttpRequest.head(
       Uri.https(_host, '$bucket/$objectName'),
@@ -166,9 +198,16 @@ class CloudFlareR2 {
     );
 
     final response = await signedRequest.send().response;
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to get object size: ${response.statusCode}');
+    _statusCode = response.statusCode;
+    if (statusCode != 200) {
+      //https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
+      if (statusCode == 404) {
+        throw Exception('File not found');
+      }
+      if (statusCode == 403) {
+        throw Exception('Access Denied');
+      }
+      throw Exception('Failed to get object info: $statusCode');
     }
 
     final contentLength = int.tryParse(response.headers['content-length'] ?? '');
@@ -205,6 +244,8 @@ class CloudFlareR2 {
 
   ///put the Object to R2
   ///
+  ///check https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+  //MARK: putObject
   static Future<void> putObject({
     required String bucket,
     required String objectName,
@@ -213,6 +254,7 @@ class CloudFlareR2 {
     String? contentType,
   }) async {
     assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    _statusCode = null;
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.put(
       Uri.https(_host, '$bucket/$objectName'),
@@ -230,18 +272,25 @@ class CloudFlareR2 {
       serviceConfiguration: _serviceConfiguration,
     );
 
-    final uploadResponse = await signedUrl.send().response;
-
-    final uploadStatus = uploadResponse.statusCode;
-    if (uploadStatus != 200) {
-      throw Exception('Failed to upload file. Status Code: $uploadStatus');
+    final response = await signedUrl.send().response;
+    _statusCode = response.statusCode;
+    if (statusCode != 200) {
+      //https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+      if (statusCode == 403) {
+        throw Exception('Access Denied');
+      }
+      if (statusCode == 400) {
+        throw Exception('Bad Request');
+      }
+      throw Exception('Failed to upload file. Status Code: $statusCode');
     }
   }
 
   ///delete the Object from R2
+  //MARK: deleteObjects
   static Future<void> deleteObject({required String bucket, required String objectName}) async {
     assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
-
+    _statusCode = null;
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.delete(
       Uri.https(_host, '$bucket/$objectName'),
@@ -257,13 +306,64 @@ class CloudFlareR2 {
       // expiresIn: const Duration(minutes: 1),
     );
 
-    final uploadResponse = await signedUrl.send().response;
+    final response = await signedUrl.send().response;
+    _statusCode = response.statusCode;
 
-    final uploadStatus = uploadResponse.statusCode;
     // log('Upload File Response: $uploadStatus');
-    if (![200, 202, 204].contains(uploadStatus)) {
+    if (![200, 202, 204].contains(statusCode)) {
+      var status = 'AWS Status Code: $statusCode\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete';
+      if (statusCode == 400) {
+        throw Exception('Bad Request. $status');
+      }
+      if (statusCode == 403) {
+        throw Exception('Access Denied. $status');
+      }
       throw Exception(
-          'Failed to delete file. AWS Status Code: $uploadStatus\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete');
+          'Failed to delete file. AWS Status Code: $statusCode\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete');
+    }
+  }
+
+  ///delete List of Objects from R2
+  ///
+  ///[bucket] - the bucket name
+  ///
+  ///[objectNames] - the list of object names
+  ///
+  ///check https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
+  //MARK: deleteObjects
+  static Future<void> deleteObjects({required String bucket, required List<String> objectNames}) async {
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    _statusCode = null;
+    // Create XML body for the delete request
+    final xmlBody = '<Delete>${objectNames.map((name) => '<Object><Key>$name</Key></Object>').join()}</Delete>';
+    // Create a pre-signed URL for downloading the file
+    final urlRequest = AWSHttpRequest.post(
+      Uri.https(_host, bucket, {'delete': ''}),
+      headers: {
+        AWSHeaders.host: _host,
+        AWSHeaders.accept: '*/*',
+        AWSHeaders.contentType: 'application/xml',
+      },
+      body: utf8.encode(xmlBody),
+    );
+    final signedUrl = await _signer!.sign(
+      urlRequest,
+      credentialScope: _scope!,
+      serviceConfiguration: _serviceConfiguration,
+    );
+
+    final response = await signedUrl.send().response;
+    _statusCode = response.statusCode;
+    // log('Upload File Response: $uploadStatus');
+    if (![200, 202, 204].contains(statusCode)) {
+      var status = 'AWS Status Code: $statusCode\n Check https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html';
+      if (statusCode == 400) {
+        throw Exception('Bad Request. $status');
+      }
+      if (statusCode == 403) {
+        throw Exception('Access Denied. $status');
+      }
+      throw Exception('Failed to delete files. $status');
     }
   }
 
@@ -286,6 +386,9 @@ class CloudFlareR2 {
   /// [startAfter] - specifies the key to start after when listing objects in a bucket
   ///
   /// [continuationToken] - the token to use for paginating through objects, **DO NOT** set this manually unless you know what you are doing
+  ///
+  /// Check https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+  //MARK: listObjectsV2
   static Future<List<ObjectInfo>> listObjectsV2({
     required String bucket,
     String region = 'us-east-1',
@@ -300,7 +403,7 @@ class CloudFlareR2 {
     String? continuationToken,
   }) async {
     assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
-
+    _statusCode = null;
     // Create query parameters
     final queryParams = {
       'list-type': '2',
@@ -325,9 +428,15 @@ class CloudFlareR2 {
     );
 
     final response = await signedUrl.send().response;
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list objects: ${response.statusCode}');
+    _statusCode = response.statusCode;
+    if (statusCode != 200) {
+      if (statusCode == 404) {
+        throw Exception('Bucket not found');
+      }
+      if (statusCode == 403) {
+        throw Exception('Access Denied');
+      }
+      throw Exception('Failed to list objects: $statusCode');
     }
 
     // Parse XML response

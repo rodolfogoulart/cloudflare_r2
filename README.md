@@ -70,6 +70,11 @@ await CloudFlareR2.putObject(
 await CloudFlareR2.deleteObject(
     bucket: 'bucket name',
     objectName: 'name of the object');
+
+//Delete list of objects
+await CloudFlareR2.deleteObjects(
+    bucket: 'bucket name',
+    objectNames: ['name of the object1', 'name of object 2']);
 ```
 
 ## Migration from 0.0.3 to 0.04
