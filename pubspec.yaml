@@ -10,9 +10,9 @@ environment:
 dependencies:
   aws_common: ^0.7.4
   aws_signature_v4: ^0.6.3
-  dio: ^5.7.0
   flutter:
     sdk: flutter
+  intl: ^0.20.1
   xml: ^6.5.0
 
 dev_dependencies:

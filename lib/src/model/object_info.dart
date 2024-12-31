@@ -22,13 +22,13 @@ class ObjectInfo {
   int size;
   DateTime lastModified;
   String eTag;
-  String storageClass;
+  String? storageClass;
   ObjectInfo({
     required this.key,
     required this.size,
     required this.lastModified,
     required this.eTag,
-    required this.storageClass,
+    this.storageClass,
   });
 
   @override

@@ -11,6 +11,7 @@ For now only **get [object, size]/put/delete/list object** Object on R2 Bucket
 | ----------        | ----------- | ----------- | ----------- | ----------- | ----------- |
 | Get Object        | 👍 | 👍       | need test | need test | need test |
 | Get Object Size   | 👍 | 👍       |  need test | need test | need test |
+| Get Object Info   | 👍 | 👍       |  need test | need test | need test |
 | Put Object        | 👍 | 👍       | need test | need test | need test |
 | Delete Object     | 👍 | 👍       | need test | need test | need test |
 | List Objects      | 👍 | need test | need test | need test | need test |
@@ -41,6 +42,12 @@ await CloudFlareR2.getObject(
   //to get the Object Size
   //return the size in bytes
   await CloudFlareR2.getObjectSize(
+    bucket: 'bucket name',
+    objectName: 'name of the object',
+  );
+
+  //get the Object Info, [name, size, etag, last modified]
+  ObjectInfo obj = await CloudFlareR2.getObjectInfo(
     bucket: 'bucket name',
     objectName: 'name of the object',
   );

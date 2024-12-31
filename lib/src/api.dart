@@ -2,7 +2,7 @@
 
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_signature_v4/aws_signature_v4.dart';
-import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 import 'package:xml/xml.dart';
 
 import 'model/object_info.dart';
@@ -76,25 +76,40 @@ class CloudFlareR2 {
         AWSHeaders.host: _host,
       },
     );
-    final signedUrl = await _signer!.presign(
+    final signedUrl = await _signer!.sign(
       urlRequest,
       credentialScope: _scope!,
       serviceConfiguration: _serviceConfiguration,
-      expiresIn: const Duration(minutes: 10),
     );
 
-    Dio dio = Dio();
-    Response response = await dio.downloadUri(
-      signedUrl,
-      pathToSave,
-      onReceiveProgress: (received, total) {
-        onReceiveProgress?.call(received, total);
-      },
-    );
+    var expectedTotalBytes = 0;
+
+    var send = signedUrl.send()
+      ..responseProgress.listen((event) {
+        if (expectedTotalBytes <= 0) return;
+        onReceiveProgress?.call(event, expectedTotalBytes);
+      }, onDone: () {
+        expectedTotalBytes = -1;
+      }, onError: (e) {
+        expectedTotalBytes = -1;
+        throw e;
+      }, cancelOnError: true);
+
+    var response = await send.response;
+    expectedTotalBytes = int.tryParse(response.headers['content-length'] ?? '') ?? -1;
     if (response.statusCode != 200) {
       throw Exception('Failed to download file');
     }
-    return response.data;
+
+    var data = await response.bodyBytes;
+    //call onReceiveProgress with the total bytes to indicate that the download is complete
+    //for some reason the listen event is called after the download is complete
+    //this may result in the progress callback be called after the download is complete
+    onReceiveProgress?.call(expectedTotalBytes, expectedTotalBytes);
+    //set the expectedTotalBytes to -1 to indicate that the download is complete
+    expectedTotalBytes = -1;
+
+    return data;
   }
 
   ///get File SIZE from R2
@@ -111,6 +126,25 @@ class CloudFlareR2 {
   ///
   ///*code from [@jesussmile](https://github.com/rodolfogoulart/cloudflare_r2/issues/4)*
   static Future<int> getObjectSize({
+    required String bucket,
+    required String objectName,
+    String region = 'us-east-1',
+  }) async {
+    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    return (await getObjectInfo(bucket: bucket, objectName: objectName, region: region)).size;
+  }
+
+  ///get the Object Info from R2
+  ///
+  ///[bucket] - the bucket name
+  ///
+  ///[objectName] - the object name
+  ///
+  ///[region] - the region of the bucket
+  ///
+  ///return [ObjectInfo] - the object info
+  ///  * [storageClass] not available
+  static Future<ObjectInfo> getObjectInfo({
     required String bucket,
     required String objectName,
     String region = 'us-east-1',
@@ -133,32 +167,40 @@ class CloudFlareR2 {
 
     final response = await signedRequest.send().response;
 
-    // log('All Headers: ${response.headers}');
-
     if (response.statusCode != 200) {
       throw Exception('Failed to get object size: ${response.statusCode}');
     }
 
-    // Get content-length as String
-    final contentLengthStr = response.headers['content-length'];
-    if (contentLengthStr == null || contentLengthStr.isEmpty) {
+    final contentLength = int.tryParse(response.headers['content-length'] ?? '');
+    final etag = response.headers['etag'];
+    //use intl to not use dart io
+    // final lastmodified = HttpDate.parse(response.headers['last-modified'] ?? '');
+    final lastModifiedHeader = response.headers['last-modified'];
+    final DateFormat httpDateFormat = DateFormat('EEE, dd MMM yyyy HH:mm:ss \'GMT\'', 'en_US');
+    final lastModified = lastModifiedHeader != null ? httpDateFormat.parseUtc(lastModifiedHeader) : null;
+
+    if (contentLength == null) {
       throw Exception('Content-Length header missing');
     }
-
-    // Parse size with error handling
-    int? size;
-    try {
-      size = int.parse(contentLengthStr);
-    } catch (e) {
-      //log('Error parsing content length: $e');
-      throw Exception('Failed to parse content length: $contentLengthStr');
+    if (etag == null) {
+      throw Exception('ETag header missing');
+    }
+    if (lastModified == null) {
+      throw Exception('Last-Modified header missing');
     }
 
-    if (size <= 0) {
-      throw Exception('Invalid file size: $size bytes');
+    var objectInfo = ObjectInfo(
+      key: objectName,
+      size: contentLength,
+      lastModified: lastModified,
+      eTag: etag,
+    );
+
+    if (contentLength <= 0) {
+      throw Exception('Invalid file size: $contentLength bytes');
     }
 
-    return size;
+    return objectInfo;
   }
 
   ///put the Object to R2
@@ -191,9 +233,8 @@ class CloudFlareR2 {
     final uploadResponse = await signedUrl.send().response;
 
     final uploadStatus = uploadResponse.statusCode;
-    // log('Upload File Response: $uploadStatus');
     if (uploadStatus != 200) {
-      throw Exception('Failed to download file');
+      throw Exception('Failed to upload file. Status Code: $uploadStatus');
     }
   }
 
@@ -222,7 +263,7 @@ class CloudFlareR2 {
     // log('Upload File Response: $uploadStatus');
     if (![200, 202, 204].contains(uploadStatus)) {
       throw Exception(
-          'Failed to download file. AWS Status Code: $uploadStatus\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete');
+          'Failed to delete file. AWS Status Code: $uploadStatus\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete');
     }
   }
 
@@ -236,8 +277,6 @@ class CloudFlareR2 {
   ///
   /// [maxKeys] - the maximum number of objects to return in a single response
   ///
-  /// [continuationToken] - the token to use for paginating through objects, **DO NOT** set this manually unless you know what you are doing
-  ///
   /// [delimiter] - a character you use to group keys
   ///
   /// [prefix] - limits the response to keys that begin with the specified prefix
@@ -245,16 +284,20 @@ class CloudFlareR2 {
   /// [encodingType] - specifies the encoding method used to encode the object keys in the response
   ///
   /// [startAfter] - specifies the key to start after when listing objects in a bucket
+  ///
+  /// [continuationToken] - the token to use for paginating through objects, **DO NOT** set this manually unless you know what you are doing
   static Future<List<ObjectInfo>> listObjectsV2({
     required String bucket,
     String region = 'us-east-1',
     bool doPagination = true,
-    int maxKeys = 1,
-    String? continuationToken,
+    int maxKeys = 1000, //default max keys
     String? delimiter,
     String? prefix,
     String? encodingType,
     String? startAfter,
+
+    ///used to paginate through objects, do not set this manually
+    String? continuationToken,
   }) async {
     assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
 
@@ -275,21 +318,21 @@ class CloudFlareR2 {
         AWSHeaders.host: _host,
       },
     );
-    final signedUrl = await _signer!.presign(
+    final signedUrl = await _signer!.sign(
       urlRequest,
       credentialScope: _scope!,
       serviceConfiguration: _serviceConfiguration,
-      expiresIn: const Duration(minutes: 10),
     );
 
-    Dio dio = Dio();
-    final response = await dio.getUri(signedUrl);
+    final response = await signedUrl.send().response;
+
     if (response.statusCode != 200) {
-      throw Exception('Failed to list objects on bucket $bucket');
+      throw Exception('Failed to list objects: ${response.statusCode}');
     }
 
     // Parse XML response
-    final xml = response.data;
+    final bodyBytes = await response.bodyBytes;
+    final xml = String.fromCharCodes(bodyBytes);
     final document = XmlDocument.parse(xml);
     final Iterable<XmlElement> contents = document.findAllElements('Contents');
     final nextContinuationToken = document.findAllElements('NextContinuationToken').singleOrNull?.innerText;

@@ -1,3 +1,11 @@
+## 0.0.8
+* Add getObjectSize
+* Refactory getObject to not use Dio
+* Refactory listObjectsV2 to not use Dio, thanks to @jesussmile on #4
+* Remove package Dio
+* Add package intl to parse DateTime
+* Fix example
+
 ## 0.0.7
 * Add listObjectsV2
 
