@@ -30,14 +30,15 @@ CloudFlareR2.init(
 
 
 //to get the Object
-await CloudFlareR2.getObject(
+List<int> object = await CloudFlareR2.getObject(
     bucket: 'bucket name',
     objectName: 'name of the object',
-    pathToSave: 'path to save the file',
     onReceiveProgress: (total, received) {
       //do the progress of the download here
     },
   );
+//handle the writing of the object after
+//File myFile = File(yourPath).writeAsBytesSync(object);
 
   //to get the Object Size
   //return the size in bytes
@@ -75,94 +76,4 @@ await CloudFlareR2.deleteObject(
 await CloudFlareR2.deleteObjects(
     bucket: 'bucket name',
     objectNames: ['name of the object1', 'name of object 2']);
-```
-
-## Migration from 0.0.3 to 0.04
-
-## Before init
-
-```dart
-await CloudFlareR2.init();
-```
-
-## Now init
-
-```dart
-CloudFlareR2.init(
-  accoundId: 'your accound ID',
-  accessKeyId: 'your access id', 
-  secretAccessKey: 'your secret acess key',   
-);
-```
-
-## Before getObject
-
-```dart
-//to get the Object
-Uint8List object = await CloudFlareR2.getObject(
-    accountId: controllerAccountId.text,
-    accessId: controllerAcessId.text,
-    secretAccessKey: controllerSecretAccessKey.text,
-    bucket: controllerBucket.text,
-    objectName: controllerObjectName.text,
-  );
-```
-
-## Now getObject
-
-```dart
-await CloudFlareR2.getObject(
-    bucket: controllerBucket.text,
-    objectName: controllerObjectName.text,
-    pathToSave: 'path to save the file',
-    onReceiveProgress: (total, received) {
-      //do the progress of the download here
-    },
-  );
-```
-
-## Before putObject
-
-```dart
-//upload some object
-await CloudFlareR2.putObject(
-  bucket: controllerBucket.text,
-  accountId: controllerAccountId.text,
-  accessId: controllerAcessId.text,
-  secretAccessKey: controllerSecretAccessKetext,
-  objectName: controllerObjectName.text,
-  objectBytes: objectBytes,
-  cacheControl: controllercacheControl.text,
-  contentType: controllercontentType.text);
-```
-
-## Now putObject
-
-```dart
-await CloudFlareR2.putObject(
-  bucket: controllerBucket.text,
-  objectName: controllerObjectName.text,
-  objectBytes: objectBytes,
-  contentType: 'content type of the file here');
-```
-
-## Before deleteObject
-
-```dart
-//Delete some object
-await CloudFlareR2.deleteObject(
-    bucket: controllerBucket.text,
-    accountId: controllerAccountId.text,
-    accessId: controllerAcessId.text,
-    secretAccessKey: controllerSecretAccessKey.text,
-    objectName: controllerObjectName.text);
-```
-
-## Now deleteObject
-
-```dart
-//Delete some object
-await CloudFlareR2.deleteObject(
-    bucket: controllerBucket.text,
-    objectName: controllerObjectName.text);
 ```

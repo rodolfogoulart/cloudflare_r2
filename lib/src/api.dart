@@ -63,8 +63,6 @@ class CloudFlareR2 {
   ///
   ///[region] - the region of the bucket
   ///
-  ///[pathToSave] - the path to save the object
-  ///
   ///onReceiveProgress
   ///
   ///[received] - the received bytes
@@ -79,11 +77,10 @@ class CloudFlareR2 {
   /// }
   /// ```
   //MARK: getObject
-  static Future getObject({
+  static Future<List<int>> getObject({
     required String bucket,
     required String objectName,
     String region = 'us-east-1',
-    required String pathToSave,
     void Function(int received, int total)? onReceiveProgress,
   }) async {
     assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
