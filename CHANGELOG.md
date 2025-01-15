@@ -1,3 +1,6 @@
+## 0.0.11
+* set `intl` to `any` version
+
 ## 0.0.10
 * Fix getObject, removed arg `pathToSave`, getObject return List<int>, the handle of the object is done outside
 * Export class `object_info`
