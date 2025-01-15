@@ -2,7 +2,6 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cloudflare_r2/src/model/object_info.dart';
 import 'package:flutter/material.dart';
 import 'package:cloudflare_r2/cloudflare_r2.dart';
 
@@ -114,8 +113,9 @@ class _MyAppState extends State<MyApp> {
                               var path = (await getApplicationSupportDirectory()).path;
                               path = '$path${Platform.pathSeparator}${controllerObjectName.text}';
                               log(path);
-                              await CloudFlareR2.getObject(
-                                pathToSave: path,
+                              List<int> object = await CloudFlareR2.getObject(
+                                //removed pathToSave
+                                // pathToSave: path,
                                 onReceiveProgress: (int received, int total) {
                                   if (total >= 0) {
                                     var persentage = '${(received / total * 100).toStringAsFixed(2)}%';
@@ -133,7 +133,7 @@ class _MyAppState extends State<MyApp> {
                               int timeDownloaded = sw.elapsed.inSeconds;
 
                               File file = File(path);
-                              // await file.writeAsBytes(object);
+                              await file.writeAsBytes(object);
 
                               log(file.path);
                               if (file.existsSync()) {
@@ -210,8 +210,9 @@ class _MyAppState extends State<MyApp> {
 
                               setState(() {
                                 result = 'Objects on Bucket: ${objects.length}\n\n Duration: $time seconds\n\n';
-                                result +=
-                                    '${objects.map((e) => '${e.key} - ${e.size} bytes - ${(e.size / 1024 / 1024).toStringAsFixed(2)} MB').join('\n')}';
+                                result += objects
+                                    .map((e) => '${e.key} - ${e.size} bytes - ${(e.size / 1024 / 1024).toStringAsFixed(2)} MB')
+                                    .join('\n');
                               });
                             },
                             child: const Text('List Objects on Bucket')),

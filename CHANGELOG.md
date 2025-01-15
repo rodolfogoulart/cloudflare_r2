@@ -1,3 +1,7 @@
+## 0.0.10
+* Fix getObject, removed arg `pathToSave`, getObject return List<int>, the handle of the object is done outside
+* Export class `object_info`
+
 ## 0.0.9
 * Add deleteObjects
 * Add exception for status code returned from api and fix wrong messages
