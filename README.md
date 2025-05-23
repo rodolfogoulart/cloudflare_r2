@@ -1,20 +1,17 @@
 # cloudflare_r2
 
-Flutter CloudFlare R2 plugin project. It's using a [aws_signature_v4](https://pub.dev/packages/aws_signature_v4) to access CloudFlare R2
+Dart CloudFlare R2 plugin project. It's using a [aws_signature_v4](https://pub.dev/packages/aws_signature_v4) to access CloudFlare R2
 
 For now only **get [object, size]/put/delete/list object** Object on R2 Bucket
 
-## `Tested on`
-
-
-| Function          | Windows       | Android       | Linux    | MacOS    | Ios    |
-| ----------        | ----------- | ----------- | ----------- | ----------- | ----------- |
-| Get Object        | 👍 | 👍       | need test | need test | need test |
-| Get Object Size   | 👍 | 👍       |  need test | need test | need test |
-| Get Object Info   | 👍 | 👍       |  need test | need test | need test |
-| Put Object        | 👍 | 👍       | need test | need test | need test |
-| Delete Object     | 👍 | 👍       | need test | need test | need test |
-| List Objects      | 👍 | need test | need test | need test | need test |
+| Function          |
+| ----------        | 
+| Get Object        |
+| Get Object Size   |
+| Get Object Info   |
+| Put Object        |
+| Delete Object     |
+| List Objects      |
 
 ## Getting Started
 
@@ -60,6 +57,7 @@ List<int> object = await CloudFlareR2.getObject(
   );
 
 //upload some object
+//return Status
 await CloudFlareR2.putObject(
   bucket: 'bucket name',
   objectName: 'name of the object',
@@ -68,11 +66,13 @@ await CloudFlareR2.putObject(
 
 
 //Delete some object
+//return Status
 await CloudFlareR2.deleteObject(
     bucket: 'bucket name',
     objectName: 'name of the object');
 
 //Delete list of objects
+//return Status
 await CloudFlareR2.deleteObjects(
     bucket: 'bucket name',
     objectNames: ['name of the object1', 'name of object 2']);

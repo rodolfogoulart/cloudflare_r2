@@ -44,7 +44,11 @@ class ObjectInfo {
 
   @override
   int get hashCode {
-    return key.hashCode ^ size.hashCode ^ lastModified.hashCode ^ eTag.hashCode ^ storageClass.hashCode;
+    return key.hashCode ^
+        size.hashCode ^
+        lastModified.hashCode ^
+        eTag.hashCode ^
+        storageClass.hashCode;
   }
 
   @override

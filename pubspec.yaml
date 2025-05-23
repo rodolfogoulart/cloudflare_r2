@@ -1,37 +1,16 @@
 name: cloudflare_r2
-description: "Flutter plugin for Cloudflare R2."
-version: 0.0.11
+description: "Dart plugin for Cloudflare R2."
+version: 0.0.12
 homepage: "https://github.com/rodolfogoulart/cloudflare_r2"
 
 environment:
   sdk: ^3.5.4
-  flutter: '>=3.3.0'
 
 dependencies:
   aws_common: ^0.7.4
   aws_signature_v4: ^0.6.3
-  flutter:
-    sdk: flutter
   intl: '>=0.17.0'
   xml: ^6.5.0
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^5.0.0
-  integration_test:
-    sdk: flutter
-
-# flutter:
-  # plugin:
-  #   platforms:
-  #     android:
-  #       ffiPlugin: true
-  #     ios:
-  #       ffiPlugin: true
-  #     linux:
-  #       ffiPlugin: true
-  #     macos:
-  #       ffiPlugin: true
-  #     windows:
-  #       ffiPlugin: true
+  lints: ^5.1.0

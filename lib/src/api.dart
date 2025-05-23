@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_signature_v4/aws_signature_v4.dart';
+import 'package:cloudflare_r2/src/model/status.dart';
 import 'package:intl/intl.dart';
 import 'package:xml/xml.dart';
 
@@ -25,7 +26,8 @@ class CloudFlareR2 {
 
   // Set up S3 values
   static AWSCredentialScope? _scope;
-  static final S3ServiceConfiguration _serviceConfiguration = S3ServiceConfiguration();
+  static final S3ServiceConfiguration _serviceConfiguration =
+      S3ServiceConfiguration();
 
   ///initialize the CloudFlareR2
   ///
@@ -39,14 +41,18 @@ class CloudFlareR2 {
   ///
   //MARK: init
   static init(
-      {required String accoundId, required String accessKeyId, required String secretAccessKey, String region = 'us-east-1'}) {
+      {required String accoundId,
+      required String accessKeyId,
+      required String secretAccessKey,
+      String region = 'us-east-1'}) {
     _host = '$accoundId.r2.cloudflarestorage.com';
     _accessKeyId = accessKeyId;
     _secretAccessKey = secretAccessKey;
     // Create a signer which uses the `default` profile from the shared
     // credentials file.
     _signer = AWSSigV4Signer(
-      credentialsProvider: AWSCredentialsProvider(AWSCredentials(_accessKeyId!, _secretAccessKey!)),
+      credentialsProvider: AWSCredentialsProvider(
+          AWSCredentials(_accessKeyId!, _secretAccessKey!)),
     );
     _scope = AWSCredentialScope(
       region: region,
@@ -83,7 +89,8 @@ class CloudFlareR2 {
     String region = 'us-east-1',
     void Function(int received, int total)? onReceiveProgress,
   }) async {
-    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
     _statusCode = null;
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.get(
@@ -112,7 +119,8 @@ class CloudFlareR2 {
       }, cancelOnError: true);
 
     var response = await send.response;
-    expectedTotalBytes = int.tryParse(response.headers['content-length'] ?? '') ?? -1;
+    expectedTotalBytes =
+        int.tryParse(response.headers['content-length'] ?? '') ?? -1;
     _statusCode = response.statusCode;
 
     if (statusCode != 200) {
@@ -156,7 +164,9 @@ class CloudFlareR2 {
     required String objectName,
     String region = 'us-east-1',
   }) async {
-    return (await getObjectInfo(bucket: bucket, objectName: objectName, region: region)).size;
+    return (await getObjectInfo(
+            bucket: bucket, objectName: objectName, region: region))
+        .size;
   }
 
   ///get the Object Info from R2
@@ -177,7 +187,8 @@ class CloudFlareR2 {
     required String objectName,
     String region = 'us-east-1',
   }) async {
-    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
     _statusCode = null;
 
     final urlRequest = AWSHttpRequest.head(
@@ -207,13 +218,17 @@ class CloudFlareR2 {
       throw Exception('Failed to get object info: $statusCode');
     }
 
-    final contentLength = int.tryParse(response.headers['content-length'] ?? '');
+    final contentLength =
+        int.tryParse(response.headers['content-length'] ?? '');
     final etag = response.headers['etag'];
     //use intl to not use dart io
     // final lastmodified = HttpDate.parse(response.headers['last-modified'] ?? '');
     final lastModifiedHeader = response.headers['last-modified'];
-    final DateFormat httpDateFormat = DateFormat('EEE, dd MMM yyyy HH:mm:ss \'GMT\'', 'en_US');
-    final lastModified = lastModifiedHeader != null ? httpDateFormat.parseUtc(lastModifiedHeader) : null;
+    final DateFormat httpDateFormat =
+        DateFormat('EEE, dd MMM yyyy HH:mm:ss \'GMT\'', 'en_US');
+    final lastModified = lastModifiedHeader != null
+        ? httpDateFormat.parseUtc(lastModifiedHeader)
+        : null;
 
     if (contentLength == null) {
       throw Exception('Content-Length header missing');
@@ -242,22 +257,25 @@ class CloudFlareR2 {
   ///put the Object to R2
   ///
   ///check https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+  ///
   //MARK: putObject
-  static Future<void> putObject({
+  static Future<Status> putObject({
     required String bucket,
     required String objectName,
     required List<int> objectBytes,
     String region = 'us-east-1',
     String? contentType,
   }) async {
-    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
     _statusCode = null;
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.put(
       Uri.https(_host, '$bucket/$objectName'),
       headers: {
         AWSHeaders.host: _host,
-        AWSHeaders.contentType: contentType ?? 'application/octet-stream',
+        if (contentType != null) AWSHeaders.contentType: contentType,
+        // AWSHeaders.contentType: contentType ?? 'application/octet-stream',
         AWSHeaders.contentLength: objectBytes.length.toString(),
         // if (contentType != null && contentType.isNotEmpty) AWSHeaders.contentType: contentType,
       },
@@ -273,20 +291,45 @@ class CloudFlareR2 {
     _statusCode = response.statusCode;
     if (statusCode != 200) {
       //https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+      //https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_Errors
       if (statusCode == 403) {
         throw Exception('Access Denied');
       }
       if (statusCode == 400) {
         throw Exception('Bad Request');
       }
+      if (statusCode == 409) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#status.409
+        throw Exception('Conflict');
+      }
+      if (statusCode == 415) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#status.415
+        throw Exception('Unsupported Media Type');
+      }
       throw Exception('Failed to upload file. Status Code: $statusCode');
+    } else {
+      ///https://www.rfc-editor.org/rfc/rfc9110.html#name-put
+      String message = '';
+      if (statusCode == 200) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#name-200-ok
+        message = 'File uploaded successfully';
+      } else if (statusCode == 201) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#name-201-created
+        message = 'File created successfully';
+      }
+      return Status(
+        status: statusCode,
+        message: message,
+      );
     }
   }
 
   ///delete the Object from R2
   //MARK: deleteObjects
-  static Future<void> deleteObject({required String bucket, required String objectName}) async {
-    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+  static Future<Status> deleteObject(
+      {required String bucket, required String objectName}) async {
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
     _statusCode = null;
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.delete(
@@ -308,7 +351,8 @@ class CloudFlareR2 {
 
     // log('Upload File Response: $uploadStatus');
     if (![200, 202, 204].contains(statusCode)) {
-      var status = 'AWS Status Code: $statusCode\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete';
+      var status =
+          'AWS Status Code: $statusCode\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete';
       if (statusCode == 400) {
         throw Exception('Bad Request. $status');
       }
@@ -317,6 +361,22 @@ class CloudFlareR2 {
       }
       throw Exception(
           'Failed to delete file. AWS Status Code: $statusCode\n Check https://www.rfc-editor.org/rfc/rfc9110.html#name-delete');
+    } else {
+      String message = '';
+      if (statusCode == 200) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#name-200-ok
+        message = 'File deleted successfully';
+      } else if (statusCode == 204) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#name-204-no-content
+        message = 'No content, file deleted successfully';
+      } else if (statusCode == 202) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#status.202
+        message = 'Request accepted, file will be deleted soon';
+      }
+      return Status(
+        status: statusCode,
+        message: message,
+      );
     }
   }
 
@@ -328,11 +388,14 @@ class CloudFlareR2 {
   ///
   ///check https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
   //MARK: deleteObjects
-  static Future<void> deleteObjects({required String bucket, required List<String> objectNames}) async {
-    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+  static Future<Status> deleteObjects(
+      {required String bucket, required List<String> objectNames}) async {
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
     _statusCode = null;
     // Create XML body for the delete request
-    final xmlBody = '<Delete>${objectNames.map((name) => '<Object><Key>$name</Key></Object>').join()}</Delete>';
+    final xmlBody =
+        '<Delete>${objectNames.map((name) => '<Object><Key>$name</Key></Object>').join()}</Delete>';
     // Create a pre-signed URL for downloading the file
     final urlRequest = AWSHttpRequest.post(
       Uri.https(_host, bucket, {'delete': ''}),
@@ -353,7 +416,8 @@ class CloudFlareR2 {
     _statusCode = response.statusCode;
     // log('Upload File Response: $uploadStatus');
     if (![200, 202, 204].contains(statusCode)) {
-      var status = 'AWS Status Code: $statusCode\n Check https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html';
+      var status =
+          'AWS Status Code: $statusCode\n Check https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html';
       if (statusCode == 400) {
         throw Exception('Bad Request. $status');
       }
@@ -361,6 +425,22 @@ class CloudFlareR2 {
         throw Exception('Access Denied. $status');
       }
       throw Exception('Failed to delete files. $status');
+    } else {
+      String message = '';
+      if (statusCode == 200) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#name-200-ok
+        message = 'Files deleted successfully';
+      } else if (statusCode == 204) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#name-204-no-content
+        message = 'No content, file deleted successfully';
+      } else if (statusCode == 202) {
+        //https://www.rfc-editor.org/rfc/rfc9110.html#status.202
+        message = 'Request accepted, file will be deleted soon';
+      }
+      return Status(
+        status: statusCode,
+        message: message,
+      );
     }
   }
 
@@ -399,7 +479,8 @@ class CloudFlareR2 {
     ///used to paginate through objects, do not set this manually
     String? continuationToken,
   }) async {
-    assert(_signer != null, 'Please call CloudFlareR2.init() before using this library');
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
     _statusCode = null;
     // Create query parameters
     final queryParams = {
@@ -441,18 +522,27 @@ class CloudFlareR2 {
     final xml = String.fromCharCodes(bodyBytes);
     final document = XmlDocument.parse(xml);
     final Iterable<XmlElement> contents = document.findAllElements('Contents');
-    final nextContinuationToken = document.findAllElements('NextContinuationToken').singleOrNull?.innerText;
+    final nextContinuationToken = document
+        .findAllElements('NextContinuationToken')
+        .singleOrNull
+        ?.innerText;
 
     // Extract object names
     final List<ObjectInfo> objectNames = [];
     for (var node in contents) {
       var key = node.findElements('Key').singleOrNull?.innerText;
       var size = node.findElements('Size').singleOrNull?.innerText;
-      var lastModified = node.findElements('LastModified').singleOrNull?.innerText;
+      var lastModified =
+          node.findElements('LastModified').singleOrNull?.innerText;
       var eTag = node.findElements('ETag').singleOrNull?.innerText;
-      var storageClass = node.findElements('StorageClass').singleOrNull?.innerText;
+      var storageClass =
+          node.findElements('StorageClass').singleOrNull?.innerText;
 
-      if (key == null || size == null || lastModified == null || eTag == null || storageClass == null) {
+      if (key == null ||
+          size == null ||
+          lastModified == null ||
+          eTag == null ||
+          storageClass == null) {
         throw Exception('Failed to parse object info');
       }
 

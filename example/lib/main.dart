@@ -110,15 +110,18 @@ class _MyAppState extends State<MyApp> {
                                 accessKeyId: controllerAcessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
-                              var path = (await getApplicationSupportDirectory()).path;
-                              path = '$path${Platform.pathSeparator}${controllerObjectName.text}';
+                              var path =
+                                  (await getApplicationSupportDirectory()).path;
+                              path =
+                                  '$path${Platform.pathSeparator}${controllerObjectName.text}';
                               log(path);
                               List<int> object = await CloudFlareR2.getObject(
                                 //removed pathToSave
                                 // pathToSave: path,
                                 onReceiveProgress: (int received, int total) {
                                   if (total >= 0) {
-                                    var persentage = '${(received / total * 100).toStringAsFixed(2)}%';
+                                    var persentage =
+                                        '${(received / total * 100).toStringAsFixed(2)}%';
                                     log(persentage);
                                     setState(() {
                                       result = 'Downloading: $persentage\n\n';
@@ -139,7 +142,8 @@ class _MyAppState extends State<MyApp> {
                               if (file.existsSync()) {
                                 log('file exists');
                                 setState(() {
-                                  result = 'File downloaded to: ${file.path}\n\n Time Downloaded: $timeDownloaded seconds';
+                                  result =
+                                      'File downloaded to: ${file.path}\n\n Time Downloaded: $timeDownloaded seconds';
                                 });
                               }
                             },
@@ -200,7 +204,8 @@ class _MyAppState extends State<MyApp> {
                                 accessKeyId: controllerAcessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
-                              List<ObjectInfo> objects = await CloudFlareR2.listObjectsV2(
+                              List<ObjectInfo> objects =
+                                  await CloudFlareR2.listObjectsV2(
                                 bucket: controllerBucket.text,
                                 // delimiter: '/',
                               );
@@ -209,21 +214,28 @@ class _MyAppState extends State<MyApp> {
                               int time = sw.elapsed.inSeconds;
 
                               setState(() {
-                                result = 'Objects on Bucket: ${objects.length}\n\n Duration: $time seconds\n\n';
+                                result =
+                                    'Objects on Bucket: ${objects.length}\n\n Duration: $time seconds\n\n';
                                 result += objects
-                                    .map((e) => '${e.key} - ${e.size} bytes - ${(e.size / 1024 / 1024).toStringAsFixed(2)} MB')
+                                    .map((e) =>
+                                        '${e.key} - ${e.size} bytes - ${(e.size / 1024 / 1024).toStringAsFixed(2)} MB')
                                     .join('\n');
                               });
                             },
                             child: const Text('List Objects on Bucket')),
                         ElevatedButton(
                             onPressed: () async {
-                              var path = (await getApplicationSupportDirectory()).path;
-                              path = '$path${Platform.pathSeparator}${controllerObjectName.text}';
+                              var path =
+                                  (await getApplicationSupportDirectory()).path;
+                              path =
+                                  '$path${Platform.pathSeparator}${controllerObjectName.text}';
                               log(path);
                               File file = File(path);
-                              file.writeAsStringSync(
-                                  List.generate(10000, (a) => 'Hello World Clouldflare R2 $a: ${DateTime.now()}').join('\n'));
+                              file.writeAsStringSync(List.generate(
+                                      10000,
+                                      (a) =>
+                                          'Hello World Clouldflare R2 $a: ${DateTime.now()}')
+                                  .join('\n'));
 
                               Uint8List objectBytes = await file.readAsBytes();
                               //
@@ -259,7 +271,8 @@ class _MyAppState extends State<MyApp> {
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               await CloudFlareR2.deleteObject(
-                                  bucket: controllerBucket.text, objectName: controllerObjectName.text);
+                                  bucket: controllerBucket.text,
+                                  objectName: controllerObjectName.text);
                               sw.stop();
                               log('${sw.elapsed.inSeconds} seconds');
                               int time = sw.elapsed.inSeconds;
@@ -280,7 +293,8 @@ class _MyAppState extends State<MyApp> {
                               );
                               await CloudFlareR2.deleteObjects(
                                 bucket: controllerBucket.text,
-                                objectNames: controllerObjectName.text.split(','),
+                                objectNames:
+                                    controllerObjectName.text.split(','),
                               );
                               sw.stop();
                               log('${sw.elapsed.inSeconds} seconds');

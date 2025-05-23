@@ -1,3 +1,7 @@
+## 0.0.12
+* Change package to dart sdk
+* Add Status class to return the status of the request on putObject, deleteObject, deleteObjects
+
 ## 0.0.11
 * set `intl` to `any` version
 
