@@ -306,6 +306,107 @@ class _MyAppState extends State<MyApp> {
                               });
                             },
                             child: const Text('Delete Objects')),
+                        ElevatedButton(
+                            onPressed: () async {
+                              CloudFlareR2.init(
+                                accoundId: controllerAccountId.text,
+                                accessKeyId: controllerAcessId.text,
+                                secretAccessKey: controllerSecretAccessKey.text,
+                              );
+                              String presignedUrl =
+                                  await CloudFlareR2.getPresignedUrl(
+                                bucket: controllerBucket.text,
+                                objectName: controllerObjectName.text,
+                                expiresIn: const Duration(hours: 1),
+                              );
+                              setState(() {
+                                result =
+                                    'Presigned GET URL (valid for 1 hour):\n\n$presignedUrl';
+                              });
+                            },
+                            child: const Text('Get Presigned URL')),
+                        ElevatedButton(
+                            onPressed: () async {
+                              CloudFlareR2.init(
+                                accoundId: controllerAccountId.text,
+                                accessKeyId: controllerAcessId.text,
+                                secretAccessKey: controllerSecretAccessKey.text,
+                              );
+                              String presignedUrl =
+                                  await CloudFlareR2.putPresignedUrl(
+                                bucket: controllerBucket.text,
+                                objectName: controllerObjectName.text,
+                                expiresIn: const Duration(minutes: 30),
+                                contentType: controllercontentType.text,
+                              );
+                              setState(() {
+                                result =
+                                    'Presigned PUT URL (valid for 30 minutes):\n\n$presignedUrl';
+                              });
+                            },
+                            child: const Text('Put Presigned URL')),
+                        ElevatedButton(
+                            onPressed: () async {
+                              // Создаем тестовый файл
+                              var path =
+                                  (await getApplicationSupportDirectory()).path;
+                              path =
+                                  '$path${Platform.pathSeparator}test_presigned_${DateTime.now().millisecondsSinceEpoch}.txt';
+                              File file = File(path);
+                              file.writeAsStringSync(
+                                  'Test upload via presigned URL: ${DateTime.now()}');
+
+                              Uint8List objectBytes = await file.readAsBytes();
+
+                              CloudFlareR2.init(
+                                accoundId: controllerAccountId.text,
+                                accessKeyId: controllerAcessId.text,
+                                secretAccessKey: controllerSecretAccessKey.text,
+                              );
+
+                              // Получаем предподписанную ссылку
+                              String presignedUrl =
+                                  await CloudFlareR2.putPresignedUrl(
+                                bucket: controllerBucket.text,
+                                objectName:
+                                    'test_presigned_${DateTime.now().millisecondsSinceEpoch}.txt',
+                                expiresIn: const Duration(minutes: 5),
+                                contentType: 'text/plain',
+                              );
+
+                              // Загружаем файл через предподписанную ссылку
+                              Stopwatch sw = Stopwatch()..start();
+                              try {
+                                final response = await HttpClient()
+                                    .putUrl(Uri.parse(presignedUrl))
+                                    .then((request) {
+                                  request.headers
+                                      .set('Content-Type', 'text/plain');
+                                  request.headers.set('Content-Length',
+                                      objectBytes.length.toString());
+                                  request.add(objectBytes);
+                                  return request.close();
+                                });
+
+                                sw.stop();
+                                final statusCode = response.statusCode;
+
+                                setState(() {
+                                  if (statusCode == 200) {
+                                    result =
+                                        'File uploaded successfully via presigned URL!\n\nTime: ${sw.elapsed.inMilliseconds}ms\nStatus: $statusCode';
+                                  } else {
+                                    result =
+                                        'Upload failed!\n\nStatus: $statusCode';
+                                  }
+                                });
+                              } catch (e) {
+                                setState(() {
+                                  result = 'Upload error: $e';
+                                });
+                              }
+                            },
+                            child: const Text('Test Upload via Presigned URL')),
                       ],
                     ),
                     Text(result)

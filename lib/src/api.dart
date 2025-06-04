@@ -444,6 +444,104 @@ class CloudFlareR2 {
     }
   }
 
+  ///Generate a pre-signed URL for downloading an object
+  ///
+  ///[bucket] - the bucket name
+  ///
+  ///[objectName] - the object name
+  ///
+  ///[expiresIn] - the duration for which the URL is valid (default: 1 hour)
+  ///
+  ///[queryParameters] - additional query parameters to include in the URL
+  ///
+  ///[headers] - additional headers to include in the signed request
+  ///
+  ///Returns a pre-signed URL as a String that can be used to download the object
+  //MARK: getPresignedUrl
+  static Future<String> getPresignedUrl({
+    required String bucket,
+    required String objectName,
+    Duration expiresIn = const Duration(hours: 1),
+    Map<String, String>? queryParameters,
+    Map<String, String>? headers,
+  }) async {
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
+
+    final urlRequest = AWSHttpRequest.get(
+      Uri.https(_host, '$bucket/$objectName', queryParameters),
+      headers: {
+        AWSHeaders.host: _host,
+        ...?headers,
+      },
+    );
+
+    final signedUrl = await _signer!.presign(
+      urlRequest,
+      credentialScope: _scope!,
+      serviceConfiguration: _serviceConfiguration,
+      expiresIn: expiresIn,
+    );
+
+    return signedUrl.toString();
+  }
+
+  ///Generate a pre-signed URL for uploading an object
+  ///
+  ///[bucket] - the bucket name
+  ///
+  ///[objectName] - the object name
+  ///
+  ///[expiresIn] - the duration for which the URL is valid (default: 1 hour, max: 7 days)
+  ///
+  ///[contentType] - the content type of the object to be uploaded
+  ///
+  ///[headers] - additional headers to include in the signed request
+  ///
+  ///Returns a pre-signed URL as a String that can be used to upload the object
+  ///
+  ///Security recommendations:
+  ///- Use short expiration times (5-30 minutes) for sensitive operations
+  ///- Always specify contentType to restrict file types
+  ///- Validate file sizes on the client side before upload
+  ///- Generate unique object names to prevent overwrites
+  //MARK: putPresignedUrl
+  static Future<String> putPresignedUrl({
+    required String bucket,
+    required String objectName,
+    Duration expiresIn = const Duration(hours: 1),
+    String? contentType,
+    Map<String, String>? headers,
+  }) async {
+    assert(_signer != null,
+        'Please call CloudFlareR2.init() before using this library');
+
+    // Validate expiration time (max 7 days)
+    if (expiresIn.inSeconds > 604800) {
+      throw ArgumentError('expiresIn cannot exceed 7 days (604800 seconds)');
+    }
+
+    final requestHeaders = {
+      AWSHeaders.host: _host,
+      if (contentType != null) AWSHeaders.contentType: contentType,
+      ...?headers,
+    };
+
+    final urlRequest = AWSHttpRequest.put(
+      Uri.https(_host, '$bucket/$objectName'),
+      headers: requestHeaders,
+    );
+
+    final signedUrl = await _signer!.presign(
+      urlRequest,
+      credentialScope: _scope!,
+      serviceConfiguration: _serviceConfiguration,
+      expiresIn: expiresIn,
+    );
+
+    return signedUrl.toString();
+  }
+
   /// List objects in a bucket
   ///
   /// [bucket] - the bucket name
