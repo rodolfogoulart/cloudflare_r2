@@ -1,3 +1,9 @@
+## 0.0.13
+* Added getPresignedUrl and putPresignedUrl methods to generate temporary signed URLs for object access
+* Enhanced example app with presigned URL demonstrations
+  
+* See changes on Pull Request [#13](https://github.com/rodolfogoulart/cloudflare_r2/pull/13) by [@dipsy](https://github.com/dipsy)
+
 ## 0.0.12
 * Change package to dart sdk
 * Add Status class to return the status of the request on putObject, deleteObject, deleteObjects
