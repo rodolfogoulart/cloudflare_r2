@@ -409,7 +409,7 @@ class _MyAppState extends State<MyApp> {
                             child: const Text('Test Upload via Presigned URL')),
                       ],
                     ),
-                    Text(result)
+                    SelectableText(result)
                   ],
                 ),
               ),
