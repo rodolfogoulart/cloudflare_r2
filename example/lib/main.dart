@@ -22,7 +22,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final controllerAccountId = TextEditingController(text: '');
 
-  final controllerAcessId = TextEditingController(text: '');
+  final controllerAccessId = TextEditingController(text: '');
 
   final controllerSecretAccessKey = TextEditingController(text: '');
 
@@ -54,7 +54,7 @@ class _MyAppState extends State<MyApp> {
                       ),
                     ),
                     TextField(
-                      controller: controllerAcessId,
+                      controller: controllerAccessId,
                       decoration: const InputDecoration(
                         labelText: 'Access Key ID',
                       ),
@@ -106,8 +106,8 @@ class _MyAppState extends State<MyApp> {
                             onPressed: () async {
                               Stopwatch sw = Stopwatch()..start();
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               var path =
@@ -153,8 +153,8 @@ class _MyAppState extends State<MyApp> {
                             onPressed: () async {
                               Stopwatch sw = Stopwatch()..start();
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               var size = await CloudFlareR2.getObjectSize(
@@ -176,8 +176,8 @@ class _MyAppState extends State<MyApp> {
                             onPressed: () async {
                               Stopwatch sw = Stopwatch()..start();
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               var obj = await CloudFlareR2.getObjectInfo(
@@ -200,8 +200,8 @@ class _MyAppState extends State<MyApp> {
                             onPressed: () async {
                               Stopwatch sw = Stopwatch()..start();
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               List<ObjectInfo> objects =
@@ -240,8 +240,8 @@ class _MyAppState extends State<MyApp> {
                               Uint8List objectBytes = await file.readAsBytes();
                               //
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               //
@@ -266,8 +266,8 @@ class _MyAppState extends State<MyApp> {
                             onPressed: () async {
                               Stopwatch sw = Stopwatch()..start();
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               await CloudFlareR2.deleteObject(
@@ -287,8 +287,8 @@ class _MyAppState extends State<MyApp> {
                             onPressed: () async {
                               Stopwatch sw = Stopwatch()..start();
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               await CloudFlareR2.deleteObjects(
@@ -309,8 +309,8 @@ class _MyAppState extends State<MyApp> {
                         ElevatedButton(
                             onPressed: () async {
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               String presignedUrl =
@@ -328,8 +328,8 @@ class _MyAppState extends State<MyApp> {
                         ElevatedButton(
                             onPressed: () async {
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
                               String presignedUrl =
@@ -359,8 +359,8 @@ class _MyAppState extends State<MyApp> {
                               Uint8List objectBytes = await file.readAsBytes();
 
                               CloudFlareR2.init(
-                                accoundId: controllerAccountId.text,
-                                accessKeyId: controllerAcessId.text,
+                                accountId: controllerAccountId.text,
+                                accessKeyId: controllerAccessId.text,
                                 secretAccessKey: controllerSecretAccessKey.text,
                               );
 
