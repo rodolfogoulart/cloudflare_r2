@@ -15,7 +15,7 @@ class CloudFlareR2 {
   static final CloudFlareR2 _instance = CloudFlareR2._();
   factory CloudFlareR2() => _instance;
 
-  static String _host = '<accoundId>.r2.cloudflarestorage.com';
+  static String _host = '<accountId>.r2.cloudflarestorage.com';
   static AWSSigV4Signer? _signer;
   static String? _accessKeyId;
   static String? _secretAccessKey;
@@ -31,7 +31,7 @@ class CloudFlareR2 {
 
   ///initialize the CloudFlareR2
   ///
-  ///[accoundId] - the account id
+  ///[accountId] - the account id
   ///
   ///[accessKeyId] - the access key id
   ///
@@ -41,11 +41,11 @@ class CloudFlareR2 {
   ///
   //MARK: init
   static init(
-      {required String accoundId,
+      {required String accountId,
       required String accessKeyId,
       required String secretAccessKey,
       String region = 'us-east-1'}) {
-    _host = '$accoundId.r2.cloudflarestorage.com';
+    _host = '$accountId.r2.cloudflarestorage.com';
     _accessKeyId = accessKeyId;
     _secretAccessKey = secretAccessKey;
     // Create a signer which uses the `default` profile from the shared

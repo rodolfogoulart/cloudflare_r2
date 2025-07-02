@@ -4,14 +4,14 @@ Dart CloudFlare R2 plugin project. It's using a [aws_signature_v4](https://pub.d
 
 For now only **get [object, size]/put/delete/list object** Object on R2 Bucket
 
-| Function          |
-| ----------        | 
-| Get Object        |
-| Get Object Size   |
-| Get Object Info   |
-| Put Object        |
-| Delete Object     |
-| List Objects      |
+| Function        |
+| --------------- |
+| Get Object      |
+| Get Object Size |
+| Get Object Info |
+| Put Object      |
+| Delete Object   |
+| List Objects    |
 
 ## Getting Started
 
@@ -20,9 +20,9 @@ Check the Example
 ```dart
 //call CloudFlareR2.init before using any call
 CloudFlareR2.init(
-  accoundId: 'your accound ID',
-  accessKeyId: 'your access id', 
-  secretAccessKey: 'your secret acess key',   
+  accountId: 'your account ID',
+  accessKeyId: 'your access id',
+  secretAccessKey: 'your secret access key',
 );
 
 
