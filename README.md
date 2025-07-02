@@ -4,14 +4,16 @@ Dart CloudFlare R2 plugin project. It's using a [aws_signature_v4](https://pub.d
 
 For now only **get [object, size]/put/delete/list object** Object on R2 Bucket
 
-| Function        |
-| --------------- |
-| Get Object      |
-| Get Object Size |
-| Get Object Info |
-| Put Object      |
-| Delete Object   |
-| List Objects    |
+| Function          |
+| ---------------   |
+| Get Object        |
+| Get Object Size   |
+| Get Object Info   |
+| Put Object        |
+| Delete Object     |
+| List Objects      |
+| Get Presigned Url |
+| Put Presigned Url |
 
 ## Getting Started
 
@@ -76,4 +78,22 @@ await CloudFlareR2.deleteObject(
 await CloudFlareR2.deleteObjects(
     bucket: 'bucket name',
     objectNames: ['name of the object1', 'name of object 2']);
+
+//Generate a pre-signed URL for downloading an object
+await CloudFlareR2.getPresignedUrl({
+    bucket: 'bucket name',
+    objectName: 'name of the object',
+    expiresIn: Duration(hours: 1),
+    queryParameters: {}, //optional
+    headers: {}, //optional
+  })
+
+// Generate a pre-signed URL for uploading an object
+await CloudFlareR2.putPresignedUrl({
+    bucket: 'bucket name',
+    objectName: 'name of the object',
+    expiresIn: Duration(hours: 1),
+    contentType: 'content type of the file here',    
+    headers: {}, //optional
+  });  
 ```

@@ -1,7 +1,10 @@
+## 0.0.14
+* Fix Readme
+* Fix typo in example and api
+
 ## 0.0.13
 * Added getPresignedUrl and putPresignedUrl methods to generate temporary signed URLs for object access
-* Enhanced example app with presigned URL demonstrations
-  
+* Enhanced example app with presigned URL demonstrations 
 * See changes on Pull Request [#13](https://github.com/rodolfogoulart/cloudflare_r2/pull/13) by [@dipsy](https://github.com/dipsy)
 
 ## 0.0.12
