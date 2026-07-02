@@ -1,3 +1,7 @@
+## 0.0.15
+* Upgrade dependencies
+    * xml, lint
+    
 ## 0.0.14
 * Fix Readme
 * Fix typo in example and api
